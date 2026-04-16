@@ -5,18 +5,46 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  telegramId BigInt   @unique
-  username   String?
-  firstName  String
-  lastName   String?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                 Int           @id @default(autoincrement())
+  telegramId         BigInt        @unique
+  username           String?
+  firstName          String
+  lastName           String?
+  isActive           Boolean       @default(true)
+  plan               Plan          @default(FREE)
+  currency           String        @default("USD")
+  subscriptionEndsAt DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  transactions       Transaction[]
 
   @@map("users")
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  amount      Float
+  type        TransactionType
+  category    String
+  description String?
+  date        DateTime
+  userId      Int
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("transactions")
 }
