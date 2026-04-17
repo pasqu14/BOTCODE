@@ -1,4 +1,4 @@
-import type { User } from '../../generated/prisma';
+import type { User } from '@prisma/client';
 import { prisma } from '../database/client';
 
 export interface CreateUserDto {
