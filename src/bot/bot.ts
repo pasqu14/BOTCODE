@@ -3,6 +3,7 @@ import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { startCommand } from './commands/start.command';
 import { helpCommand } from './commands/help.command';
+import { textHandler } from './handlers/text.handler';
 
 const BOT_COMMANDS = [
   { command: 'start', description: 'Iniciar el bot' },
@@ -16,6 +17,7 @@ export function createBot(): Telegraf {
 
   bot.command('start', startCommand);
   bot.command('help', helpCommand);
+  bot.on('text', textHandler);
 
   bot.catch((err: unknown) => {
     logger.error('Unhandled bot error', err);
