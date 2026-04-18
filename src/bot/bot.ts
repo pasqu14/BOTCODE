@@ -1,5 +1,7 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
+import type { NarrowedContext, Context } from 'telegraf';
+import type { Update, Message } from 'telegraf/types';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { startCommand } from './commands/start.command';
@@ -26,8 +28,10 @@ export function createBot(): Telegraf {
   bot.command('resumen', resumenCommand);
   bot.command('categorias', categoriasCommand);
 
-  // Message listeners
-  bot.on(message('voice'), voiceHandler);
+  // Message listeners — voice before text to avoid text handler catching it
+  bot.on(message('voice'), (ctx) =>
+    voiceHandler(ctx as NarrowedContext<Context, Update.MessageUpdate<Message.VoiceMessage>>),
+  );
   bot.on(message('text'), textHandler);
 
   bot.catch((err: unknown) => {

@@ -1,14 +1,13 @@
-import type { Context } from 'telegraf';
-import type { Message } from 'telegraf/types';
+import type { NarrowedContext, Context } from 'telegraf';
+import type { Update, Message } from 'telegraf/types';
 import { extractExpenseData, transcribeAudio } from '../../services/ai.service';
 import { prisma } from '../../database/client';
 import { logger } from '../../utils/logger';
 
-export async function voiceHandler(ctx: Context): Promise<void> {
-  const msg = ctx.message as Message.VoiceMessage | undefined;
-  if (!msg?.voice) {
-    return;
-  }
+type VoiceContext = NarrowedContext<Context, Update.MessageUpdate<Message.VoiceMessage>>;
+
+export async function voiceHandler(ctx: VoiceContext): Promise<void> {
+  console.log('[INFO] 🎤 Audio recibido, procesando...');
 
   const from = ctx.from;
   if (!from) {
@@ -19,35 +18,49 @@ export async function voiceHandler(ctx: Context): Promise<void> {
   try {
     await ctx.sendChatAction('typing');
 
-    const fileLink = await ctx.telegram.getFileLink(msg.voice.file_id);
-    const audioResponse = await fetch(fileLink.href);
-    if (!audioResponse.ok) {
-      throw new Error(`Error descargando audio: ${audioResponse.status}`);
-    }
-    const buffer = Buffer.from(await audioResponse.arrayBuffer());
+    // Download audio from Telegram
+    let buffer: Buffer;
+    try {
+      const fileLink = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
+      console.log('[INFO] 🔗 File link obtenido:', fileLink.href);
 
+      const audioResponse = await fetch(fileLink.href);
+      if (!audioResponse.ok) {
+        throw new Error(`HTTP ${audioResponse.status} al descargar el audio`);
+      }
+      buffer = Buffer.from(await audioResponse.arrayBuffer());
+      console.log(`[INFO] 📦 Audio descargado: ${buffer.length} bytes`);
+    } catch (error) {
+      console.error('[ERROR] ❌ Fallo al descargar el audio:', error);
+      await ctx.reply('❌ No pude descargar el audio. Intenta de nuevo.');
+      return;
+    }
+
+    // Transcribe with Whisper
     let transcription: string;
     try {
       transcription = await transcribeAudio(buffer);
+      console.log(`[INFO] 📝 Transcripción: "${transcription}"`);
     } catch (error) {
-      logger.error('Whisper transcription failed', error);
+      console.error('[ERROR] ❌ Fallo en Whisper:', error);
       await ctx.reply('❌ No pude transcribir el audio. Intenta enviando un mensaje de texto.');
       return;
     }
 
-    logger.info(`Transcription: "${transcription}"`);
-
+    // Extract expense data with LLM
     let parsed;
     try {
       parsed = await extractExpenseData(transcription);
     } catch (error) {
       logger.error('AI parsing failed for voice', error);
-      await ctx.reply(
-        `🎤 Escuché: "<i>${transcription}</i>"\n\n❌ No pude extraer un gasto de eso. Intenta ser más específico.`,
+      await ctx.replyWithHTML(
+        `🎤 Escuché: "<i>${transcription}</i>"\n\n` +
+          `❌ No pude extraer un gasto de eso. Intenta ser más específico.`,
       );
       return;
     }
 
+    // Find user in DB
     const user = await prisma.user.findUnique({
       where: { telegramId: BigInt(from.id) },
     });
@@ -76,7 +89,7 @@ export async function voiceHandler(ctx: Context): Promise<void> {
         `📝 Descripción: ${parsed.description}`,
     );
   } catch (error) {
-    logger.error('Error in voiceHandler', error);
+    console.error('[ERROR] ❌ Error inesperado en voiceHandler:', error);
     await ctx.reply('❌ Ocurrió un error procesando tu nota de voz. Intenta de nuevo.');
   }
 }
