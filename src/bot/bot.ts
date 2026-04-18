@@ -7,14 +7,14 @@ import { helpCommand } from './commands/help.command';
 import { resumenCommand, categoriasCommand } from './commands/summary.command';
 import { textHandler } from './handlers/text.handler';
 import { voiceHandler } from './handlers/voice.handler';
+import { exportarCommand } from './commands/export.command';
 
 const BOT_COMMANDS = [
   { command: 'start', description: 'Iniciar el bot' },
   { command: 'help', description: 'Ver guía de uso' },
   { command: 'resumen', description: 'Ver resumen financiero' },
   { command: 'categorias', description: 'Ver gastos por categoría' },
-  { command: 'balance', description: 'Ver balance del mes' },
-  { command: 'export', description: 'Descargar Excel con transacciones' },
+  { command: 'exportar', description: 'Descargar reporte Excel con IA' },
 ];
 
 export function createBot(): Telegraf {
@@ -45,6 +45,7 @@ export function createBot(): Telegraf {
   bot.command('help', helpCommand);
   bot.command('resumen', resumenCommand);
   bot.command('categorias', categoriasCommand);
+  bot.command('exportar', exportarCommand);
 
   // Text
   bot.on(message('text'), textHandler);

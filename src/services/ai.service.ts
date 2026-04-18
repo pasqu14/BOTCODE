@@ -46,6 +46,25 @@ export async function extractExpenseData(text: string): Promise<any> {
   }
 }
 
+export async function generateFinancialInsights(summary: string): Promise<string> {
+  const prompt = `Eres un asesor financiero amigable y directo. Un usuario te comparte este resumen de sus finanzas personales:
+
+${summary}
+
+Redacta exactamente 3 consejos financieros breves, útiles y con onda, basados específicamente en estos datos.
+Sé concreto: menciona categorías o montos si es relevante.
+Formato: una línea por consejo, numerados del 1 al 3. Sin markdown, sin asteriscos, sin encabezados.`;
+
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama3-8b-8192',
+    temperature: 0.7,
+    max_tokens: 350,
+  });
+
+  return chatCompletion.choices[0]?.message?.content?.trim() ?? 'No se pudieron generar consejos.';
+}
+
 export async function transcribeAudio(buffer: Buffer): Promise<string> {
   try {
     const file = await toFile(buffer, 'audio.ogg', { type: 'audio/ogg' });
