@@ -45,10 +45,24 @@ export async function extractExpenseData(text: string): Promise<ParsedTransactio
     });
 
     const raw = completion.choices[0]?.message?.content?.trim() ?? '';
-    const parsed: unknown = JSON.parse(raw);
+
+    // Strip markdown code fences Llama3 sometimes wraps around the JSON
+    const cleaned = raw
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .trim();
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (parseError) {
+      console.error('[ERROR] Error parseando JSON de Groq:', parseError, 'Texto crudo:', raw);
+      throw new Error(`JSON inválido recibido del modelo: ${raw}`);
+    }
 
     if (!isValidTransaction(parsed)) {
-      throw new Error(`Respuesta inválida del modelo: ${raw}`);
+      console.error('[ERROR] Estructura inválida de Groq. Texto crudo:', raw);
+      throw new Error(`Respuesta inválida del modelo: ${cleaned}`);
     }
 
     return parsed;
