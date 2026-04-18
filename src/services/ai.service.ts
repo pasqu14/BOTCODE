@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import Groq, { toFile } from 'groq-sdk';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
@@ -29,22 +29,22 @@ Ejemplos:
 - "uber 15 usd" → {"amount":15,"type":"EXPENSE","category":"Transporte","currency":"USD","description":"Viaje en Uber"}
 `.trim();
 
-const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 
-export async function parseTransactionMessage(text: string): Promise<ParsedTransaction> {
+export async function extractExpenseData(text: string): Promise<ParsedTransaction> {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: text,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0,
-        maxOutputTokens: 128,
-      },
+    const completion = await groq.chat.completions.create({
+      model: 'llama3-8b-8192',
+      messages: [
+        { role: 'system', content: SYSTEM_INSTRUCTION },
+        { role: 'user', content: text },
+      ],
+      temperature: 0,
+      max_tokens: 150,
+      response_format: { type: 'json_object' },
     });
 
-    const raw = response.text?.trim() ?? '';
-
+    const raw = completion.choices[0]?.message?.content?.trim() ?? '';
     const parsed: unknown = JSON.parse(raw);
 
     if (!isValidTransaction(parsed)) {
@@ -53,8 +53,26 @@ export async function parseTransactionMessage(text: string): Promise<ParsedTrans
 
     return parsed;
   } catch (error) {
-    logger.error('Error al parsear transacción con IA', error);
+    logger.error('Error al parsear transacción con Groq', error);
     throw new Error('No pude entender el mensaje. Intenta con más detalle, ej: "gasté 200 en comida".');
+  }
+}
+
+export async function transcribeAudio(buffer: Buffer): Promise<string> {
+  try {
+    const file = await toFile(buffer, 'audio.ogg', { type: 'audio/ogg' });
+
+    const transcription = await groq.audio.transcriptions.create({
+      file,
+      model: 'whisper-large-v3',
+      language: 'es',
+      response_format: 'text',
+    });
+
+    return typeof transcription === 'string' ? transcription : transcription.text;
+  } catch (error) {
+    logger.error('Error al transcribir audio con Whisper', error);
+    throw new Error('No pude transcribir el audio. Intenta enviando un mensaje de texto.');
   }
 }
 

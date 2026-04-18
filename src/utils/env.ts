@@ -11,6 +11,6 @@ function requireEnv(key: string): string {
 export const env = {
   BOT_TOKEN: requireEnv('BOT_TOKEN'),
   DATABASE_URL: requireEnv('DATABASE_URL'),
-  GEMINI_API_KEY: requireEnv('GEMINI_API_KEY'),
+  GROQ_API_KEY: requireEnv('GROQ_API_KEY'),
   NODE_ENV: process.env['NODE_ENV'] ?? 'development',
 };

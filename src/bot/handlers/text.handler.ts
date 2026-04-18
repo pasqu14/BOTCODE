@@ -1,6 +1,6 @@
 import type { Context } from 'telegraf';
 import type { Message } from 'telegraf/types';
-import { parseTransactionMessage } from '../../services/ai.service';
+import { extractExpenseData } from '../../services/ai.service';
 import { prisma } from '../../database/client';
 import { logger } from '../../utils/logger';
 
@@ -17,7 +17,7 @@ export async function textHandler(ctx: Context): Promise<void> {
 
     let parsed;
     try {
-      parsed = await parseTransactionMessage(text);
+      parsed = await extractExpenseData(text);
     } catch (error) {
       logger.error('AI parsing failed', error);
       await ctx.reply(
