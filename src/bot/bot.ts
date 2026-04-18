@@ -1,7 +1,5 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
-import type { NarrowedContext, Context } from 'telegraf';
-import type { Update, Message } from 'telegraf/types';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { startCommand } from './commands/start.command';
@@ -22,7 +20,7 @@ const BOT_COMMANDS = [
 export function createBot(): Telegraf {
   const bot = new Telegraf(env.BOT_TOKEN);
 
-  // Global debug middleware — must be first, before any command or handler
+  // Global debug middleware — first in chain
   bot.use(async (ctx, next) => {
     console.log(`[DEBUG] Update recibido: ${ctx.updateType}`);
     if (ctx.message && 'voice' in ctx.message) {
@@ -31,16 +29,24 @@ export function createBot(): Telegraf {
     return next();
   });
 
+  // Voice — string-based filter, registered immediately after debug middleware
+  bot.on('voice', async (ctx) => {
+    console.log('\n🚨 [AUDIOCATCHER] ¡Nota de voz interceptada con éxito!');
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await voiceHandler(ctx as any);
+    } catch (error) {
+      console.error('Error en el handler de voz:', error);
+    }
+  });
+
   // Commands
   bot.command('start', startCommand);
   bot.command('help', helpCommand);
   bot.command('resumen', resumenCommand);
   bot.command('categorias', categoriasCommand);
 
-  // Voice MUST be registered before text
-  bot.on(message('voice'), (ctx) =>
-    voiceHandler(ctx as NarrowedContext<Context, Update.MessageUpdate<Message.VoiceMessage>>),
-  );
+  // Text
   bot.on(message('text'), textHandler);
 
   bot.catch((err: unknown) => {
@@ -61,7 +67,7 @@ export async function launchBot(bot: Telegraf): Promise<void> {
     void bot.stop('SIGTERM');
   });
 
-  // No allowedUpdates restriction — all update types are received including voice
+  // No allowedUpdates restriction — all update types received including voice
   await bot.launch();
   logger.info('Bot launched successfully');
 }
