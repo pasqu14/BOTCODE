@@ -46,6 +46,7 @@ export async function textHandler(ctx: Context): Promise<void> {
         amount: parsed.amount,
         type: parsed.type,
         category: parsed.category,
+        description: parsed.description,
         date: new Date(),
         userId: user.id,
       },
@@ -54,7 +55,8 @@ export async function textHandler(ctx: Context): Promise<void> {
     await ctx.replyWithHTML(
       `✅ <b>Gasto registrado</b>\n` +
         `💰 Monto: ${parsed.amount} ${parsed.currency}\n` +
-        `🏷️ Categoría: ${parsed.category}`,
+        `🏷️ Categoría: ${parsed.category}\n` +
+        `📝 Descripción: ${parsed.description}`,
     );
   } catch (error) {
     logger.error('Error in textHandler', error);

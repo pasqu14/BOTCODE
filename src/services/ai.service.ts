@@ -7,6 +7,7 @@ export interface ParsedTransaction {
   type: 'INCOME' | 'EXPENSE';
   category: string;
   currency: string;
+  description: string;
 }
 
 const SYSTEM_INSTRUCTION = `
@@ -20,11 +21,12 @@ El JSON debe tener exactamente estos campos:
 - "type": "INCOME" si es un ingreso/cobro/ganancia, "EXPENSE" si es un gasto/pago/compra
 - "category": categoría corta en español (ej: "Comida", "Transporte", "Salario", "Entretenimiento", "Salud", "Servicios")
 - "currency": código ISO 4217 de la moneda mencionada (ej: "USD", "ARS", "EUR"). Default "USD" si no se menciona.
+- "description": frase corta que resume la transacción tal como la describió el usuario (máx 60 caracteres)
 
 Ejemplos:
-- "gasté 500 pesos en el super" → {"amount":500,"type":"EXPENSE","category":"Supermercado","currency":"ARS"}
-- "me pagaron 1200 dólares de salario" → {"amount":1200,"type":"INCOME","category":"Salario","currency":"USD"}
-- "uber 15 usd" → {"amount":15,"type":"EXPENSE","category":"Transporte","currency":"USD"}
+- "gasté 500 pesos en el super" → {"amount":500,"type":"EXPENSE","category":"Supermercado","currency":"ARS","description":"Compra en el supermercado"}
+- "me pagaron 1200 dólares de salario" → {"amount":1200,"type":"INCOME","category":"Salario","currency":"USD","description":"Pago de salario mensual"}
+- "uber 15 usd" → {"amount":15,"type":"EXPENSE","category":"Transporte","currency":"USD","description":"Viaje en Uber"}
 `.trim();
 
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
@@ -68,6 +70,8 @@ function isValidTransaction(value: unknown): value is ParsedTransaction {
     typeof obj['category'] === 'string' &&
     obj['category'].length > 0 &&
     typeof obj['currency'] === 'string' &&
-    obj['currency'].length === 3
+    obj['currency'].length === 3 &&
+    typeof obj['description'] === 'string' &&
+    obj['description'].length > 0
   );
 }
