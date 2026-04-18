@@ -29,6 +29,7 @@ const INSIGHT_FILL: ExcelJS.Fill = {
 };
 
 export async function exportarCommand(ctx: Context): Promise<void> {
+  console.log('--- EJECUTANDO COMANDO EXPORTAR ---');
   const from = ctx.from;
   if (!from) {
     await ctx.reply('❌ No pude identificar tu usuario.');

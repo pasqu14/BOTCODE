@@ -5,6 +5,11 @@ import { prisma } from '../../database/client';
 import { logger } from '../../utils/logger';
 
 export async function textHandler(ctx: Context, next: () => Promise<void>): Promise<void> {
+  if (ctx.message && 'text' in ctx.message && ctx.message.text.startsWith('/')) {
+    console.log(`[DEBUG] Ignorando comando en textHandler: ${ctx.message.text}`);
+    return next();
+  }
+
   const msg = ctx.message as Message.TextMessage | undefined;
   const text = msg?.text;
 
