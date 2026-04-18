@@ -4,12 +4,13 @@ import { extractExpenseData } from '../../services/ai.service';
 import { prisma } from '../../database/client';
 import { logger } from '../../utils/logger';
 
-export async function textHandler(ctx: Context): Promise<void> {
+export async function textHandler(ctx: Context, next: () => Promise<void>): Promise<void> {
   const msg = ctx.message as Message.TextMessage | undefined;
   const text = msg?.text;
 
+  // Pass commands through to their registered handlers
   if (!text || text.startsWith('/')) {
-    return;
+    return next();
   }
 
   try {
