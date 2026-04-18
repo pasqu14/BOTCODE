@@ -22,13 +22,22 @@ const BOT_COMMANDS = [
 export function createBot(): Telegraf {
   const bot = new Telegraf(env.BOT_TOKEN);
 
-  // Commands — must be registered before generic text listener
+  // Global debug middleware — must be first, before any command or handler
+  bot.use(async (ctx, next) => {
+    console.log(`[DEBUG] Update recibido: ${ctx.updateType}`);
+    if (ctx.message && 'voice' in ctx.message) {
+      console.log(`[DEBUG] 🚨 ¡Es un mensaje de voz! Duración: ${ctx.message.voice.duration}s`);
+    }
+    return next();
+  });
+
+  // Commands
   bot.command('start', startCommand);
   bot.command('help', helpCommand);
   bot.command('resumen', resumenCommand);
   bot.command('categorias', categoriasCommand);
 
-  // Message listeners — voice before text to avoid text handler catching it
+  // Voice MUST be registered before text
   bot.on(message('voice'), (ctx) =>
     voiceHandler(ctx as NarrowedContext<Context, Update.MessageUpdate<Message.VoiceMessage>>),
   );
@@ -52,6 +61,7 @@ export async function launchBot(bot: Telegraf): Promise<void> {
     void bot.stop('SIGTERM');
   });
 
+  // No allowedUpdates restriction — all update types are received including voice
   await bot.launch();
   logger.info('Bot launched successfully');
 }
