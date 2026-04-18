@@ -1,4 +1,5 @@
 import { Telegraf } from 'telegraf';
+import { message } from 'telegraf/filters';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { startCommand } from './commands/start.command';
@@ -17,7 +18,7 @@ export function createBot(): Telegraf {
 
   bot.command('start', startCommand);
   bot.command('help', helpCommand);
-  bot.on('text', textHandler);
+  bot.on(message('text'), textHandler);
 
   bot.catch((err: unknown) => {
     logger.error('Unhandled bot error', err);
