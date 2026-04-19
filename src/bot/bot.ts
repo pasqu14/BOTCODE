@@ -6,6 +6,7 @@ import { accessMiddleware } from './middlewares/access.middleware';
 import { startCommand } from './commands/start.command';
 import { helpCommand } from './commands/help.command';
 import { activarCommand } from './commands/activar.command';
+import { crearPaseCommand } from './commands/crearpase.command';
 import { resumenCommand, categoriasCommand } from './commands/summary.command';
 import { exportarCommand } from './commands/export.command';
 import { textHandler } from './handlers/text.handler';
@@ -38,6 +39,7 @@ export function createBot(): Telegraf {
   // 3. Exempt commands (always reachable regardless of hasAccess)
   bot.command('start', startCommand);
   bot.command('activar', activarCommand);
+  bot.command('crearpase', crearPaseCommand);
 
   // 4. Protected commands (only reachable if accessMiddleware called next())
   bot.command('help', helpCommand);

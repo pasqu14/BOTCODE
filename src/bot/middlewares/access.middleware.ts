@@ -2,7 +2,7 @@ import type { Context } from 'telegraf';
 import { prisma } from '../../database/client';
 import { logger } from '../../utils/logger';
 
-const EXEMPT_PREFIXES = ['/start', '/activar'];
+const EXEMPT_PREFIXES = ['/start', '/activar', '/crearpase'];
 
 function isExemptCommand(ctx: Context): boolean {
   if (!ctx.message || !('text' in ctx.message)) {
