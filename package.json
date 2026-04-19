@@ -14,7 +14,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:push": "prisma db push"
+    "db:push": "ts-node scripts/db-push-ws.ts",
+    "db:push:direct": "prisma db push"
   },
   "repository": {
     "type": "git",
@@ -24,12 +25,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@prisma/adapter-neon": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "dotenv": "^17.4.2",
-    "telegraf": "^4.16.3"
+    "exceljs": "^4.4.0",
+    "groq-sdk": "^0.13.0",
+    "telegraf": "^4.16.3",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
     "eslint": "^10.2.0",

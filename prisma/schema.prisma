@@ -5,18 +5,34 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  telegramId BigInt   @unique
-  username   String?
-  firstName  String
-  lastName   String?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  telegramId    BigInt    @unique
+  username      String?
+  firstName     String
+  lastName      String?
+  isActive      Boolean   @default(true)
+  monthlyBudget Decimal?  @db.Decimal(10, 2)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  expenses      Expense[]
 
   @@map("users")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  amount      Decimal  @db.Decimal(10, 2)
+  currency    String   @default("ARS")
+  category    String
+  description String
+  rawText     String?
+  type        String   @default("gasto")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+
+  @@map("expenses")
 }
