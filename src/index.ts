@@ -1,10 +1,24 @@
+import http from 'http';
 import { connectDatabase, disconnectDatabase } from './database/client';
 import { createBot, launchBot } from './bot/bot';
 import { logger } from './utils/logger';
 
+// Servidor HTTP mínimo para que Render detecte el puerto y no mate el proceso
+function startHealthServer(): void {
+  const port = process.env['PORT'] ?? '3000';
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+  });
+  server.listen(Number(port), () => {
+    logger.info(`Health check server listening on port ${port}`);
+  });
+}
+
 async function main(): Promise<void> {
   logger.info('Starting application...');
 
+  startHealthServer();
   await connectDatabase();
 
   const bot = createBot();
