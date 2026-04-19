@@ -13,7 +13,7 @@ model User {
   username      String?
   firstName     String
   lastName      String?
-  isActive      Boolean   @default(true)
+  isActive      Boolean   @default(false)
   monthlyBudget Decimal?  @db.Decimal(10, 2)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -35,4 +35,14 @@ model Expense {
   userId      Int
 
   @@map("expenses")
+}
+
+model ActivationCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  usedById  Int?
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("activation_codes")
 }

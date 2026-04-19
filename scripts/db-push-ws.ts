@@ -32,6 +32,7 @@ function splitStatements(sql: string): string[] {
 const ALTER_STATEMENTS = [
   'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "monthlyBudget" DECIMAL(10,2)',
   `ALTER TABLE "expenses" ADD COLUMN IF NOT EXISTS "type" VARCHAR(10) NOT NULL DEFAULT 'gasto'`,
+  `ALTER TABLE "users" ALTER COLUMN "isActive" SET DEFAULT false`,
 ];
 
 async function main(): Promise<void> {

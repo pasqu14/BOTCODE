@@ -14,6 +14,9 @@ import { suscripcionesCommand } from './commands/suscripciones.command';
 import { dividirCommand } from './commands/dividir.command';
 import { auditoriaCommand } from './commands/auditoria.command';
 import { testCommand } from './commands/test.command';
+import { activarCommand } from './commands/activar.command';
+import { crearpaseCommand } from './commands/crearpase.command';
+import { authMiddleware } from './middleware/auth.middleware';
 import { extractExpenseData } from '../services/ai.service';
 import { transcribeAudio } from '../services/transcription.service';
 import { prisma } from '../database/client';
@@ -124,7 +127,12 @@ export function createBot(): Telegraf {
     { command: 'auditoria', description: '🧠 Análisis financiero del mes' },
   ]);
 
+  // Guardia global de acceso (va antes de todos los comandos)
+  bot.use(authMiddleware);
+
   bot.command('start', startCommand);
+  bot.command('activar', activarCommand);
+  bot.command('crearpase', crearpaseCommand);
   bot.command('gastos', gastosCommand);
   bot.command('resumen', resumenCommand);
   bot.command('exportar', exportCommand);
