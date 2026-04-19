@@ -2,15 +2,18 @@ import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
+import { accessMiddleware } from './middlewares/access.middleware';
 import { startCommand } from './commands/start.command';
 import { helpCommand } from './commands/help.command';
+import { activarCommand } from './commands/activar.command';
 import { resumenCommand, categoriasCommand } from './commands/summary.command';
+import { exportarCommand } from './commands/export.command';
 import { textHandler } from './handlers/text.handler';
 import { voiceHandler } from './handlers/voice.handler';
-import { exportarCommand } from './commands/export.command';
 
 const BOT_COMMANDS = [
   { command: 'start', description: 'Iniciar el bot' },
+  { command: 'activar', description: 'Activar acceso con código' },
   { command: 'help', description: 'Ver guía de uso' },
   { command: 'resumen', description: 'Ver resumen financiero' },
   { command: 'categorias', description: 'Ver gastos por categoría' },
@@ -20,7 +23,7 @@ const BOT_COMMANDS = [
 export function createBot(): Telegraf {
   const bot = new Telegraf(env.BOT_TOKEN);
 
-  // Global debug middleware — first in chain
+  // 1. Global debug middleware
   bot.use(async (ctx, next) => {
     console.log(`[DEBUG] Update recibido: ${ctx.updateType}`);
     if (ctx.message && 'voice' in ctx.message) {
@@ -29,7 +32,20 @@ export function createBot(): Telegraf {
     return next();
   });
 
-  // Voice — string-based filter, registered immediately after debug middleware
+  // 2. Access guard — runs before everything except /start and /activar
+  bot.use(accessMiddleware);
+
+  // 3. Exempt commands (always reachable regardless of hasAccess)
+  bot.command('start', startCommand);
+  bot.command('activar', activarCommand);
+
+  // 4. Protected commands (only reachable if accessMiddleware called next())
+  bot.command('help', helpCommand);
+  bot.command('resumen', resumenCommand);
+  bot.command('categorias', categoriasCommand);
+  bot.command('exportar', exportarCommand);
+
+  // 5. Voice — string-based filter
   bot.on('voice', async (ctx) => {
     console.log('\n🚨 [AUDIOCATCHER] ¡Nota de voz interceptada con éxito!');
     try {
@@ -40,14 +56,7 @@ export function createBot(): Telegraf {
     }
   });
 
-  // Commands
-  bot.command('start', startCommand);
-  bot.command('help', helpCommand);
-  bot.command('resumen', resumenCommand);
-  bot.command('categorias', categoriasCommand);
-  bot.command('exportar', exportarCommand);
-
-  // Text
+  // 6. Free-text (protected by accessMiddleware above)
   bot.on(message('text'), textHandler);
 
   bot.catch((err: unknown) => {
@@ -68,7 +77,6 @@ export async function launchBot(bot: Telegraf): Promise<void> {
     void bot.stop('SIGTERM');
   });
 
-  // No allowedUpdates restriction — all update types received including voice
   await bot.launch();
   logger.info('Bot launched successfully');
 }

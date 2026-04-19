@@ -17,18 +17,20 @@ enum TransactionType {
 }
 
 model User {
-  id                 Int           @id @default(autoincrement())
-  telegramId         BigInt        @unique
+  id                 Int             @id @default(autoincrement())
+  telegramId         BigInt          @unique
   username           String?
   firstName          String
   lastName           String?
-  isActive           Boolean       @default(true)
-  plan               Plan          @default(FREE)
-  currency           String        @default("USD")
+  isActive           Boolean         @default(true)
+  hasAccess          Boolean         @default(false)
+  plan               Plan            @default(FREE)
+  currency           String          @default("USD")
   subscriptionEndsAt DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   transactions       Transaction[]
+  activationCode     ActivationCode?
 
   @@map("users")
 }
@@ -46,4 +48,16 @@ model Transaction {
   updatedAt   DateTime        @updatedAt
 
   @@map("transactions")
+}
+
+model ActivationCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  isUsed    Boolean   @default(false)
+  usedById  Int?      @unique
+  usedBy    User?     @relation(fields: [usedById], references: [id])
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("activation_codes")
 }
